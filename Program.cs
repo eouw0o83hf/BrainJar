@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using fNbt;
+using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
 namespace BrainJar
 {
@@ -27,7 +30,7 @@ namespace BrainJar
             TargetSave
         );
 
-        public static async Task Main(string[] args)
+        public static async Task Main(string[] _)
         {
             var individualRegion = "r.0.0.mca";
             var regionPath = Path.Combine(
@@ -37,14 +40,22 @@ namespace BrainJar
 
             var region = await RegionFile.Load(regionPath);
 
-            var locations = region.ChunkLocations.Take(10).ToList();
-            var timestamps = region.ChunkTimestamps.Take(10).ToList();
-            for (var i = 0; i < 10; ++i)
+            // var locations = region.ChunkLocations.Take(10).ToList();
+            // var timestamps = region.ChunkTimestamps.Take(10).ToList();
+            // for (var i = 0; i < 10; ++i)
+            // {
+            //     Console.WriteLine(i);
+            //     Console.WriteLine("Offset " + (locations[i].Offset << 12));
+            //     Console.WriteLine($"   x, z        | {locations[i].XOffset}, {locations[i].ZOffset}");
+            //     Console.WriteLine($"   Offset Size | {locations[i].Offset}  {locations[i].Size}");
+            //     Console.WriteLine($"   Timestamp   | {timestamps[i].Timestamp}");
+            // }
+
+            foreach (var location in region.ChunkLocations.OrderBy(a => a.Offset))
             {
-                Console.WriteLine(i);
-                Console.WriteLine($"   x, z        | {locations[i].XOffset}, {locations[i].ZOffset}");
-                Console.WriteLine($"   Offset Size | {locations[i].Offset}  {locations[i].Size}");
-                Console.WriteLine($"   Timestamp   | {timestamps[i].Timestamp}");
+                Console.WriteLine("Offset " + (location.Offset << 12));
+                Console.WriteLine($"   x, z        | {location.XOffset}, {location.ZOffset}");
+                Console.WriteLine($"   Offset Size | {location.Offset}  {location.Size}");
             }
         }
     }
@@ -116,6 +127,21 @@ namespace BrainJar
                 );
             }
 
+            var lastLocation = locations
+                .Single(a => a.XOffset == 2
+                            && a.ZOffset == 9);
+            {
+                var length = lastLocation.Size << 12;
+                var buffer = new byte[length];
+
+                stream.Seek(lastLocation.Offset << 12, SeekOrigin.Begin);
+                await stream.ReadAsync(buffer, 0, length);
+
+                Console.WriteLine($"Reading from {lastLocation.Offset << 12} for {length}");
+
+                new Chunk(lastLocation.XOffset, lastLocation.ZOffset, buffer);
+            }
+
             // Section II: Chunks
             //  Location and size defined by location
             //  found in header
@@ -129,7 +155,10 @@ namespace BrainJar
                 stream.Seek(location.Offset << 12, SeekOrigin.Begin);
                 await stream.ReadAsync(buffer, 0, length);
 
+                Console.WriteLine($"Reading from {location.Offset << 12} for {length}");
+
                 chunks.Add(new Chunk(location.XOffset, location.ZOffset, buffer));
+                break;
             }
 
             return new RegionFile(xAnchor, zAnchor, locations, timestamps, chunks);
@@ -152,7 +181,7 @@ namespace BrainJar
         {
             // TODO this might need to be swapped
             // since anvil format may have switched
-            // ordering of indeces
+            // ordering of indices
             XOffset = index % 32;
             ZOffset = index / 32;
 
@@ -201,10 +230,66 @@ namespace BrainJar
         public readonly int XOffset;
         public readonly int ZOffset;
 
+        public readonly int DataLength;
+
         public Chunk(int xOffset, int zOffset, byte[] buffer)
         {
             XOffset = xOffset;
             ZOffset = zOffset;
+
+            /*
+            Chunk data begins with a (big-endian) four-byte length field that indicates the exact length of the remaining chunk data in bytes. The following byte indicates the compression scheme used for chunk data, and the remaining (length-1) bytes are the compressed chunk data.
+
+            Minecraft always pads the last chunk's data to be a multiple-of-4096B in length (so that the entire file has a size that is a multiple of 4KiB). Minecraft does not accept files in which the last chunk is not padded. Note that this padding is not included in the length field.            
+            */
+
+            var lengthArray = buffer[0..4];
+            if (BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(lengthArray);
+            }
+            Console.WriteLine(string.Join(' ', lengthArray));
+            DataLength = BitConverter.ToInt32(lengthArray);
+            Console.WriteLine("Calculated lenght: " + DataLength);
+            Console.WriteLine("Buffer size " + buffer.Length);
+
+            // first four are above
+            // next one is always 2 (zlib)
+            // index 5+ is zlib-compressed chunk data
+            var newBuffer = buffer.Skip(5).Take(DataLength).ToArray();
+
+            using var compressed = new MemoryStream(newBuffer);
+            using var decompressed = new InflaterInputStream(compressed);
+            using var forReal = new MemoryStream();
+            decompressed.CopyTo(forReal);
+            var decompressedBuffer = forReal.ToArray();
+
+            decompressedBuffer.DumpArray(32, 4208);
+
+            var index = decompressedBuffer.ToList().IndexOf(12);
+            Console.WriteLine(" Failure index: " + index);
+            Console.WriteLine(" Total length: " + decompressedBuffer.Length);
+
+            var nbt = new NbtFile();
+            // using var decompress = new DeflateStream(new MemoryStream(newBuffer), CompressionMode.Decompress);
+            // nbt.LoadFromStream(decompress, NbtCompression.None);
+
+            nbt.LoadFromBuffer(decompressedBuffer, 0, decompressedBuffer.Length, NbtCompression.None);
+        }
+    }
+
+    public static class Extensions
+    {
+        public static void DumpArray(this byte[] array, int rows = 16, int startIndex = 0)
+        {
+            for (var i = 0; i < rows; ++i)
+            {
+                Console.WriteLine(
+                    string.Join(' ',
+                        array.Skip(startIndex + i * 16).Take(16)
+                    )
+                );
+            }
         }
     }
 }
