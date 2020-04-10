@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using fNbt;
-using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 
 namespace BrainJar
 {
@@ -264,21 +262,8 @@ namespace BrainJar
             }
             DataLength = BitConverter.ToInt32(lengthArray);
 
-            // first four are above
-            // next one is always 2 (zlib)
-            // index 5+ is zlib-compressed chunk data
-            var newBuffer = buffer.Skip(5).Take(DataLength).ToArray();
-
-            using var compressed = new MemoryStream(newBuffer);
-            using var decompressed = new InflaterInputStream(compressed);
-
-            var nbt = new NbtFile
-            {
-                BigEndian = true
-            };
-
-            // using var decompress = new DeflateStream(new MemoryStream(newBuffer), CompressionMode.Decompress);
-            nbt.LoadFromStream(decompressed, NbtCompression.None);
+            var nbt = new NbtFile();
+            nbt.LoadFromBuffer(buffer, 5, DataLength - 5, NbtCompression.AutoDetect);
         }
     }
 
