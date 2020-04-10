@@ -50,13 +50,6 @@ namespace BrainJar
             //     Console.WriteLine($"   Offset Size | {locations[i].Offset}  {locations[i].Size}");
             //     Console.WriteLine($"   Timestamp   | {timestamps[i].Timestamp}");
             // }
-
-            foreach (var location in region.ChunkLocations.OrderBy(a => a.Offset))
-            {
-                Console.WriteLine("Offset " + (location.Offset << 12));
-                Console.WriteLine($"   x, z        | {location.XOffset}, {location.ZOffset}");
-                Console.WriteLine($"   Offset Size | {location.Offset}  {location.Size}");
-            }
         }
     }
 
@@ -127,24 +120,27 @@ namespace BrainJar
                 );
             }
 
-            var lastLocation = locations
-                .Single(a => a.XOffset == 2
-                            && a.ZOffset == 9);
-            {
-                var length = lastLocation.Size << 12;
-                var buffer = new byte[length];
+            // var lastLocation = locations
+            //     .Single(a => a.XOffset == 2
+            //                 && a.ZOffset == 9);
+            // {
+            //     var length = lastLocation.Size << 12;
+            //     var buffer = new byte[length];
 
-                stream.Seek(lastLocation.Offset << 12, SeekOrigin.Begin);
-                await stream.ReadAsync(buffer, 0, length);
+            //     stream.Seek(lastLocation.Offset << 12, SeekOrigin.Begin);
+            //     await stream.ReadAsync(buffer, 0, length);
 
-                Console.WriteLine($"Reading from {lastLocation.Offset << 12} for {length}");
+            //     Console.WriteLine($"Reading from {lastLocation.Offset << 12} for {length}");
 
-                new Chunk(lastLocation.XOffset, lastLocation.ZOffset, buffer);
-            }
+            //     new Chunk(lastLocation.XOffset, lastLocation.ZOffset, buffer);
+            // }
 
             // Section II: Chunks
             //  Location and size defined by location
             //  found in header
+            var successCount = 0;
+            var failureCount = 0;
+
             var chunks = new List<Chunk>();
             for (var i = 0; i < 1024; ++i)
             {
@@ -152,14 +148,32 @@ namespace BrainJar
                 var length = location.Size << 12;
                 var buffer = new byte[length];
 
+                if (location.Size == 0)
+                {
+                    continue;
+                }
+
                 stream.Seek(location.Offset << 12, SeekOrigin.Begin);
                 await stream.ReadAsync(buffer, 0, length);
 
-                Console.WriteLine($"Reading from {location.Offset << 12} for {length}");
+                try
+                {
+                    chunks.Add(new Chunk(location.XOffset, location.ZOffset, buffer));
+                }
+                catch
+                {
+                    ++failureCount;
+                    // Console.WriteLine("Failure for (" + location.XOffset + ", " + location.ZOffset + ")");
+                    continue;
+                }
 
-                chunks.Add(new Chunk(location.XOffset, location.ZOffset, buffer));
-                break;
+                ++successCount;
+
+                // Console.WriteLine("It worked for (" + location.XOffset + ", " + location.ZOffset + ")");
             }
+
+            Console.WriteLine(successCount + " succeeded");
+            Console.WriteLine(failureCount + " failed");
 
             return new RegionFile(xAnchor, zAnchor, locations, timestamps, chunks);
         }
@@ -248,10 +262,7 @@ namespace BrainJar
             {
                 Array.Reverse(lengthArray);
             }
-            Console.WriteLine(string.Join(' ', lengthArray));
             DataLength = BitConverter.ToInt32(lengthArray);
-            Console.WriteLine("Calculated lenght: " + DataLength);
-            Console.WriteLine("Buffer size " + buffer.Length);
 
             // first four are above
             // next one is always 2 (zlib)
@@ -260,21 +271,14 @@ namespace BrainJar
 
             using var compressed = new MemoryStream(newBuffer);
             using var decompressed = new InflaterInputStream(compressed);
-            using var forReal = new MemoryStream();
-            decompressed.CopyTo(forReal);
-            var decompressedBuffer = forReal.ToArray();
 
-            decompressedBuffer.DumpArray(32, 4208);
+            var nbt = new NbtFile
+            {
+                BigEndian = true
+            };
 
-            var index = decompressedBuffer.ToList().IndexOf(12);
-            Console.WriteLine(" Failure index: " + index);
-            Console.WriteLine(" Total length: " + decompressedBuffer.Length);
-
-            var nbt = new NbtFile();
             // using var decompress = new DeflateStream(new MemoryStream(newBuffer), CompressionMode.Decompress);
-            // nbt.LoadFromStream(decompress, NbtCompression.None);
-
-            nbt.LoadFromBuffer(decompressedBuffer, 0, decompressedBuffer.Length, NbtCompression.None);
+            nbt.LoadFromStream(decompressed, NbtCompression.None);
         }
     }
 
