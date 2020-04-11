@@ -170,16 +170,28 @@ namespace BrainJar
                 /// </summary>
                 /// <remarks>
                 /// Pretty sure this needs to be multiplied by 16
-                /// since it's the index and not the coordinate
+                /// since it's the index and not the coordinate.
+                /// It seems like there's always an entry for 255
+                /// to cap off the top of the world(?) maybe
                 /// </remarks>
                 public readonly byte Y;
 
                 /// <summary>
                 /// Set of different block states used in the chunk
                 /// </summary>
+                /// <remarks>
+                /// I have a conjecture that Palette is a misnomer
+                /// and that it's actually the core data for the
+                /// blocks in this section
+                /// </remarks>
                 public readonly IReadOnlyCollection<SectionBlock> Palette;
+                public readonly NbtList PaletteRaw;
 
                 public readonly byte[] BlockLight;
+
+                /// <raw>
+                /// A variable amount of 64-bit longs, enough to fit 4096 indices. The indices correspond to the ordering of elements in the section's Palette. All indices are the same size in a section, which is the size required to represent the largest index (minimum of 4 bits). If the size of each index is not a factor of 64, the bits continue on the next long.
+                /// </raw>
                 public readonly long[] BlockStates;
                 public readonly byte[] SkyLight;
 
@@ -187,8 +199,8 @@ namespace BrainJar
                 {
                     Y = data.Get<NbtByte>("Y").Value;
 
-                    Palette = data
-                        .Get<NbtList>("Palette")
+                    PaletteRaw = data.Get<NbtList>("Palette");
+                    Palette = PaletteRaw
                         ?.Cast<NbtCompound>()
                         .Select(a => new SectionBlock(a))
                         .ToList()
