@@ -62,6 +62,7 @@ namespace BrainJar
             /// blocks in the y direction
             /// </summary>
             public readonly IReadOnlyCollection<LevelSection> Sections;
+            public readonly IReadOnlyCollection<SaneSection> SaneSections;
 
             public readonly NbtList Entities;
             public readonly NbtList TileEntities;
@@ -79,7 +80,7 @@ namespace BrainJar
             public ChunkLevel(NbtCompound data)
             {
                 XPos = data.Get<NbtInt>("xPos").Value;
-                XPos = data.Get<NbtInt>("zPos").Value;
+                ZPos = data.Get<NbtInt>("zPos").Value;
 
                 LastUpdate = data.Get<NbtLong>("LastUpdate").Value;
                 InhabitedTime = data.Get<NbtLong>("InhabitedTime").Value;
@@ -98,6 +99,9 @@ namespace BrainJar
                     )
                     .ToList()
                     .AsReadOnly();
+                SaneSections = Sections
+                    .Select(a => new SaneSection(a))
+                    .ToList();
 
                 Entities = data.Get<NbtList>("Entities");
                 TileEntities = data.Get<NbtList>("TileEntities");

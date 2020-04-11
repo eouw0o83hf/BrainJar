@@ -6,10 +6,19 @@ namespace BrainJar
     /// <summary>
     /// A Chunk is a 16x16 X/Z segment with up
     /// to 256 in height on the Y axis
-    /// </summary> 
+    /// </summary>
     public class ChunkWrapper
     {
+        /// <summary>
+        /// Region-file offset of the chunk within the file.
+        /// Not in-game coordinates.
+        /// </summary>
         public readonly int XOffset;
+
+        /// <summary>
+        /// Region-file offset of the chunk within the file.
+        /// Not in-game coordinates.
+        /// </summary>
         public readonly int ZOffset;
 
         public readonly int DataLength;
@@ -25,7 +34,7 @@ namespace BrainJar
             /*
             Chunk data begins with a (big-endian) four-byte length field that indicates the exact length of the remaining chunk data in bytes. The following byte indicates the compression scheme used for chunk data, and the remaining (length-1) bytes are the compressed chunk data.
 
-            Minecraft always pads the last chunk's data to be a multiple-of-4096B in length (so that the entire file has a size that is a multiple of 4KiB). Minecraft does not accept files in which the last chunk is not padded. Note that this padding is not included in the length field.            
+            Minecraft always pads the last chunk's data to be a multiple-of-4096B in length (so that the entire file has a size that is a multiple of 4KiB). Minecraft does not accept files in which the last chunk is not padded. Note that this padding is not included in the length field.
             */
 
             var lengthArray = buffer[0..4];

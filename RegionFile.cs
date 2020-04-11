@@ -32,7 +32,7 @@ namespace BrainJar
             Chunks = chunks;
         }
 
-        public static async Task<RegionFile> Load(string path)
+        public static async Task<RegionFile> LoadAsync(string path)
         {
             // Filename is of form `r.#.#.mca`
             var filename = Path.GetFileName(path);
