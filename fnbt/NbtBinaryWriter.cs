@@ -214,7 +214,7 @@ namespace fNbt
             {
                 // Aggressively try to not allocate memory in this loop for runtime performance reasons.
                 // Use an Encoder to write out the string correctly (handling surrogates crossing buffer
-                // boundaries properly).  
+                // boundaries properly).
                 int charStart = 0;
                 int numLeft = value.Length;
                 while (numLeft > 0)

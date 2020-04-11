@@ -11,7 +11,14 @@ namespace BrainJar
     // names because this is horrible
     public class Chunk
     {
+        /// <summary>
+        /// Version of the Chunk NBT structure
+        /// </summary>
         public readonly int DataVersion;
+
+        /// <summary>
+        /// Core Chunk data
+        /// </summary>
         public readonly ChunkLevel Level;
 
         public Chunk(NbtFile data)
@@ -22,7 +29,14 @@ namespace BrainJar
 
         public class ChunkLevel
         {
+            /// <summary>
+            /// X position of this Chunk
+            /// </summary>
             public readonly int XPos;
+
+            /// <summary>
+            /// Z position of this Chunk
+            /// </summary>
             public readonly int ZPos;
 
             public readonly long LastUpdate;
@@ -30,9 +44,37 @@ namespace BrainJar
 
             public readonly int[] Biomes;
 
+            /// <summary>
+            /// Several different heightmaps corresponding to 256 values compacted at 9 bits per value (lowest being 0, highest being 256, both values inclusive)
+            /// </summary>
+            /// <remarks>
+            /// This feels like caching/optimization.
+            /// I suspect we may be able to ignore this and
+            /// let the game recalculate but that may be
+            /// overly optimistic. Many chunks have null
+            /// values inside, so that backs up my guess.
+            /// </remarks>
             public readonly LevelHeightmap Heightmaps;
             public readonly LevelCarvingMasks CarvingMasks;
+
+            /// <summary>
+            /// A sub-cube of the Chunk, covering 16
+            /// blocks in the y direction
+            /// </summary>
             public readonly IReadOnlyCollection<LevelSection> Sections;
+
+            public readonly NbtList Entities;
+            public readonly NbtList TileEntities;
+            public readonly NbtList TileTicks;
+            public readonly NbtList LiquidTicks;
+            public readonly NbtList Lights;
+            public readonly NbtList LiquidsToBeTicked;
+            public readonly NbtList ToBeTicked;
+            public readonly NbtList PostProcessing;
+
+            public readonly string Status;
+
+            public readonly NbtCompound Structures;
 
             public ChunkLevel(NbtCompound data)
             {
@@ -56,15 +98,46 @@ namespace BrainJar
                     )
                     .ToList()
                     .AsReadOnly();
+
+                Entities = data.Get<NbtList>("Entities");
+                TileEntities = data.Get<NbtList>("TileEntities");
+                TileTicks = data.Get<NbtList>("TileTicks");
+                LiquidTicks = data.Get<NbtList>("LiquidTicks");
+                Lights = data.Get<NbtList>("Lights");
+                LiquidsToBeTicked = data.Get<NbtList>("LiquidsToBeTicked");
+                ToBeTicked = data.Get<NbtList>("ToBeTicked");
+                PostProcessing = data.Get<NbtList>("PostProcessing");
+
+                Status = data.Get<NbtString>("Status")?.Value;
+
+                Structures = data.Get<NbtCompound>("Structures");
             }
 
             public class LevelHeightmap
             {
+                /// <summary>
+                /// The highest block that blocks motion or contains a fluid.
+                /// </summary>
                 public readonly long[] MotionBlocking;
+                /// <summary>
+                /// The highest block that blocks motion or contains a fluid or is in the minecraft:leaves tag.
+                /// </summary>
                 public readonly long[] MotionBlockingNoLeaves;
+                /// <summary>
+                /// The highest non-air block, solid block.
+                /// </summary>
                 public readonly long[] OceanFloor;
+                /// <summary>
+                /// The highest block that is neither air nor contains a fluid, for worldgen.
+                /// </summary>
                 public readonly long[] OceanFloorWg;
+                /// <summary>
+                /// The highest non-air block.
+                /// </summary>
                 public readonly long[] WorldSurface;
+                /// <summary>
+                /// The highest non-air block, for worldgen.
+                /// </summary>
                 public readonly long[] WorldSurfaceWg;
 
                 public LevelHeightmap(NbtCompound data)
@@ -92,8 +165,18 @@ namespace BrainJar
 
             public class LevelSection
             {
+                /// <summary>
+                /// Y index of this section
+                /// </summary>
+                /// <remarks>
+                /// Pretty sure this needs to be multiplied by 16
+                /// since it's the index and not the coordinate
+                /// </remarks>
                 public readonly byte Y;
 
+                /// <summary>
+                /// Set of different block states used in the chunk
+                /// </summary>
                 public readonly IReadOnlyCollection<SectionBlock> Palette;
 
                 public readonly byte[] BlockLight;
@@ -111,32 +194,35 @@ namespace BrainJar
                         .ToList()
                         .AsReadOnly();
 
-                    BlockLight = data.Get<NbtByteArray>("BlockLight").Value;
-                    BlockStates = data.Get<NbtLongArray>("BlockStates").Value;
-                    SkyLight = data.Get<NbtByteArray>("SkyLight").Value;
+                    BlockLight = data.Get<NbtByteArray>("BlockLight")?.Value;
+                    BlockStates = data.Get<NbtLongArray>("BlockStates")?.Value;
+                    SkyLight = data.Get<NbtByteArray>("SkyLight")?.Value;
                 }
 
                 public class SectionBlock
                 {
+                    /// <summary>
+                    /// Namespaced block ID
+                    /// </summary>
                     public readonly string Name;
-                    public readonly BlockProperties Properties;
+                    /// <summary>
+                    /// List of block state properties
+                    /// </summary>
+                    /// <remarks>
+                    /// To reserialize, just jame each kvp into the
+                    /// Properties compound as an NbtString with
+                    /// Name = Key and Value = Value
+                    /// </remarks>
+                    public readonly IDictionary<string, string> Properties;
 
                     public SectionBlock(NbtCompound data)
                     {
                         Name = data.Get<NbtString>("Name").Value;
 
-                        var properties = data.Get<NbtCompound>("Properties");
-                        Properties = new BlockProperties(properties);
-                    }
-
-                    public class BlockProperties
-                    {
-                        public readonly string Name;
-
-                        public BlockProperties(NbtCompound data)
-                        {
-                            Name = data.Get<NbtString>("Name")?.Value;
-                        }
+                        Properties = data
+                            .Get<NbtCompound>("Properties")
+                            ?.OfType<NbtString>()
+                            .ToDictionary(a => a.Name, a => a.Value);
                     }
                 }
             }
