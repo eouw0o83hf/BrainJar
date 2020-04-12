@@ -30,12 +30,16 @@ namespace BrainJar
         public class ChunkLevel
         {
             /// <summary>
-            /// X position of this Chunk
+            /// Absolute, signed X position of this Chunk
+            /// in the world. Multiply by 16 to get
+            /// absolute block position.
             /// </summary>
             public readonly int XPos;
 
             /// <summary>
-            /// Z position of this Chunk
+            /// Absolute, signed Z position of this Chunk
+            /// in the world. Multiply by 16 to get
+            /// absolute block position.
             /// </summary>
             public readonly int ZPos;
 
@@ -99,6 +103,7 @@ namespace BrainJar
                     )
                     .ToList()
                     .AsReadOnly();
+
                 SaneSections = Sections
                     .Select(a => new SaneSection(a))
                     .ToList();

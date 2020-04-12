@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -29,6 +28,15 @@ namespace BrainJar
 
         public SaneSection(Chunk.ChunkLevel.LevelSection section)
         {
+            var dumping = false;
+            if (section.PaletteRaw != null && section.PaletteRaw.ToString().Contains("diamond_block"))
+            {
+                Console.WriteLine("Found a diamond section");
+                Console.WriteLine(section.PaletteRaw);
+                Console.WriteLine();
+                dumping = true;
+            }
+
             YIndex = section.Y;
             YOffset = section.Y * 16;
 
@@ -71,8 +79,6 @@ namespace BrainJar
                     }
                 }
 
-                var state = Palette[index];
-
                 var scalarCoordinates = i;
                 var x = scalarCoordinates % 16;
                 scalarCoordinates /= 16;
@@ -80,12 +86,34 @@ namespace BrainJar
                 scalarCoordinates /= 16;
                 var y = scalarCoordinates % 16;
 
+                // According to this, an index without a matching
+                // value is considered air. Not sure if that holds
+                // but we'll run with it
+                // https://wiki.vg/Chunk_Format
+                if (!Palette.TryGetValue(index, out var block))
+                {
+                    if (dumping)
+                    {
+                        Console.Write("miss!  ");
+                    }
+
+                    block = new Block
+                    {
+                        Name = BlockTypes.Air.ToMinecraftNamespace()
+                    };
+                }
+
+                if (dumping)
+                {
+                    Console.WriteLine($"{x},{y},{z} : {block.Name}");
+                }
+
                 PlacedBlocks.Add(new PlacedBlock
                 {
                     XOffset = x,
                     YOffset = y,
                     ZOffset = z,
-                    Block = Palette[index]
+                    Block = block
                 });
             }
         }

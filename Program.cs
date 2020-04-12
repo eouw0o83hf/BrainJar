@@ -24,9 +24,9 @@ namespace BrainJar
                     -253, 64, -206
             */
 
-            var netherBlocks = manager.Search(BlockTypes.NetherBricks, -253, 64, -200);
+            var diamondBlocks = manager.Search(BlockTypes.BlockOfDiamond, -253, 64, -200);
 
-            await foreach (var block in netherBlocks)
+            await foreach (var block in diamondBlocks)
             {
                 Console.WriteLine($"({block.X},{block.Y},{block.Z}) {block.Block.Name}");
             }

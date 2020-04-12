@@ -128,7 +128,7 @@ namespace BrainJar
         public const string ChorusFlower = "chorus_flower";
         public const string ChorusPlant = "chorus_plant";
         public const string Clay = "clay";
-        public const string BlockofCoal = "coal_block";
+        public const string BlockOfCoal = "coal_block";
         public const string CoalOre = "coal_ore";
         public const string CoarseDirt = "coarse_dirt";
         public const string Cobblestone = "cobblestone";
@@ -205,7 +205,7 @@ namespace BrainJar
         public const string DeadTubeCoralFan = "dead_tube_coral_fan";
         public const string DeadTubeCoralWallFan = "dead_tube_coral_wall_fan";
         public const string DetectorRail = "detector_rail";
-        public const string BlockofDiamond = "diamond_block";
+        public const string BlockOfDiamond = "diamond_block";
         public const string DiamondOre = "diamond_ore";
         public const string Diorite = "diorite";
         public const string DioriteSlab = "diorite_slab";
@@ -218,7 +218,7 @@ namespace BrainJar
         public const string DragonWallHead = "dragon_wall_head";
         public const string DriedKelpBlock = "dried_kelp_block";
         public const string Dropper = "dropper";
-        public const string BlockofEmerald = "emerald_block";
+        public const string BlockOfEmerald = "emerald_block";
         public const string EmeraldOre = "emerald_ore";
         public const string EnchantingTable = "enchanting_table";
         public const string EndGateway = "end_gateway";
@@ -245,7 +245,7 @@ namespace BrainJar
         public const string Glass = "glass";
         public const string GlassPane = "glass_pane";
         public const string Glowstone = "glowstone";
-        public const string BlockofGold = "gold_block";
+        public const string BlockOfGold = "gold_block";
         public const string GoldOre = "gold_ore";
         public const string Granite = "granite";
         public const string GraniteSlab = "granite_slab";
@@ -298,7 +298,7 @@ namespace BrainJar
         public const string InfestedStoneBricks = "infested_stone_bricks";
         public const string IronBars = "iron_bars";
         public const string IronDoor = "iron_door";
-        public const string BlockofIron = "iron_block";
+        public const string BlockOfIron = "iron_block";
         public const string IronOre = "iron_ore";
         public const string IronTrapdoor = "iron_trapdoor";
         public const string JackOLantern = "jack_o_lantern";
@@ -356,7 +356,7 @@ namespace BrainJar
         public const string LightWeightedPressurePlate = "light_weighted_pressure_plate";
         public const string Lilac = "lilac";
         public const string LilyPad = "lily_pad";
-        public const string LilyoftheValley = "lily_of_the_valley";
+        public const string LilyOfTheValley = "lily_of_the_valley";
         public const string LimeBanner = "lime_banner";
         public const string LimeBed = "lime_bed";
         public const string LimeCarpet = "lime_carpet";
@@ -484,7 +484,7 @@ namespace BrainJar
         public const string PottedDeadBush = "potted_dead_bush";
         public const string PottedFern = "potted_fern";
         public const string PottedJungleSapling = "potted_jungle_sapling";
-        public const string PottedLilyoftheValley = "potted_lily_of_the_valley";
+        public const string PottedLilyOfTheValley = "potted_lily_of_the_valley";
         public const string PottedOakSapling = "potted_oak_sapling";
         public const string PottedOrangeTulip = "potted_orange_tulip";
         public const string PottedOxeyeDaisy = "potted_oxeye_daisy";
@@ -521,7 +521,7 @@ namespace BrainJar
         public const string PurpurPillar = "purpur_pillar";
         public const string PurpurSlab = "purpur_slab";
         public const string PurpurStairs = "purpur_stairs";
-        public const string BlockofQuartz = "quartz_block";
+        public const string BlockOfQuartz = "quartz_block";
         public const string QuartzPillar = "quartz_pillar";
         public const string QuartzSlab = "quartz_slab";
         public const string QuartzStairs = "quartz_stairs";
@@ -550,7 +550,7 @@ namespace BrainJar
         public const string RedTulip = "red_tulip";
         public const string RedWallBanner = "red_wall_banner";
         public const string RedWool = "red_wool";
-        public const string BlockofRedstone = "redstone_block";
+        public const string BlockOfRedstone = "redstone_block";
         public const string RedstoneLamp = "redstone_lamp";
         public const string RedstoneOre = "redstone_ore";
         public const string RedstoneTorch = "redstone_torch";

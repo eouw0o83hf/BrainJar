@@ -44,6 +44,8 @@ namespace BrainJar
             Regions.Clear();
             await LoadMegacube(x, y, z);
 
+            yield break;
+
             var searchTerm = $"minecraft:{blockType}";
 
             foreach (var region in Regions)
@@ -52,12 +54,9 @@ namespace BrainJar
                 {
                     foreach (var section in chunk.SaneSections)
                     {
-                        var xOffset = region.XAnchor * 512
-                                    // TODO not exactly sure what XPos is
-                                    + chunk.XPos;
+                        var xOffset = chunk.XPos * 16;
                         var yOffset = section.YOffset;
-                        var zOffset = region.ZAnchor * 512
-                                    + chunk.ZPos;
+                        var zOffset = chunk.ZPos * 16;
 
                         var blocks = section
                             .PlacedBlocks
@@ -83,13 +82,14 @@ namespace BrainJar
         /// </summary>
         private async Task LoadMegacube(int x, int y, int z)
         {
-            for (var i = -1; i <= 1; ++i)
-            {
-                for (var j = -1; j <= 1; ++j)
-                {
-                    await GetRegion(x + (i * 512), z + (j * 512));
-                }
-            }
+            await GetRegion(x, z);
+            // for (var i = -1; i <= 1; ++i)
+            // {
+            //     for (var j = -1; j <= 1; ++j)
+            //     {
+            //         await GetRegion(x + (i * 512), z + (j * 512));
+            //     }
+            // }
         }
 
         public async Task<PlacedBlock> GetBlock(int x, int y, int z)
@@ -159,7 +159,7 @@ namespace BrainJar
                 return region;
             }
 
-            var filename = $"r.{x}.{z}.mca";
+            var filename = $"r.{xAnchor}.{zAnchor}.mca";
             var regionPath = Path.Combine(DropboxPath, "region", filename);
             if (!File.Exists(regionPath))
             {

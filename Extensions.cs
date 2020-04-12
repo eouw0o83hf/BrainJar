@@ -46,7 +46,7 @@ namespace BrainJar
             // I think we need to go from large to small
             // but I'm not confident. Just make sure it's
             // consistent with splitting into bits.
-            var bytes = BitConverter.GetBytes((ulong)source);
+            var bytes = BitConverter.GetBytes(source);
             if (BitConverter.IsLittleEndian)
             {
                 return bytes.Reverse();
@@ -73,5 +73,8 @@ namespace BrainJar
             }
             return bits;
         }
+
+        public static string ToMinecraftNamespace(this string source)
+            => $"minecraft:{source}";
     }
 }

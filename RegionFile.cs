@@ -10,7 +10,13 @@ namespace BrainJar
     /// </summary>
     public class RegionFile
     {
+        /// <summary>
+        /// Signed number of chunks from origin
+        /// </summary>
         public readonly int XAnchor;
+        /// <summary>
+        /// Signed number of chunks from origin
+        /// </summary>
         public readonly int ZAnchor;
 
         public readonly IReadOnlyCollection<ChunkLocation> ChunkLocations;

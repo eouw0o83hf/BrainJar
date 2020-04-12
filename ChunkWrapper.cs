@@ -10,14 +10,12 @@ namespace BrainJar
     public class ChunkWrapper
     {
         /// <summary>
-        /// Region-file offset of the chunk within the file.
-        /// Not in-game coordinates.
+        /// x-axis index of chunk from region frame of reference
         /// </summary>
         public readonly int XOffset;
 
         /// <summary>
-        /// Region-file offset of the chunk within the file.
-        /// Not in-game coordinates.
+        /// y-axis index of chunk from region frame of reference
         /// </summary>
         public readonly int ZOffset;
 
