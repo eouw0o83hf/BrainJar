@@ -7,6 +7,43 @@ namespace BrainJar
     public static class Extensions
     {
         /// <summary>
+        /// Decompresses the bits contained
+        /// in the source longs with sub-group
+        /// lengths groupSize. Big-endian
+        /// </summary>
+        public static IEnumerable<int> DecompressInts(this long[] source, int groupSize)
+            => source
+                .ToBitGroups(groupSize)
+                .ToInts();
+
+        /// <summary>
+        /// Converts the given long array into
+        /// a series of bit groupings. Big-endian
+        /// </summary>
+        public static IEnumerable<IEnumerable<bool>> ToBitGroups(this long[] source, int groupSize)
+            => source
+                .ToBits()
+                .Batch(groupSize);
+
+        public static IEnumerable<int> ToInts(this IEnumerable<IEnumerable<bool>> source)
+        {
+            foreach (var group in source)
+            {
+                var acc = 0;
+                foreach (var bit in group)
+                {
+                    // idempotent on first run
+                    acc <<= 1;
+                    if (bit)
+                    {
+                        acc |= 1;
+                    }
+                }
+                yield return acc;
+            }
+        }
+
+        /// <summary>
         /// Splits the input IEnumerable into sections which are all of size 'size'
         /// (except for maybe the last section depending on how the division works)
         /// </summary>

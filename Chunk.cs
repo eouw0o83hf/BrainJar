@@ -105,7 +105,7 @@ namespace BrainJar
                     .AsReadOnly();
 
                 SaneSections = Sections
-                    .Select(a => new SaneSection(a))
+                    .Select(a => new SaneSection(a, Heightmaps.HeightMap))
                     .ToList();
 
                 Entities = data.Get<NbtList>("Entities");
@@ -149,6 +149,8 @@ namespace BrainJar
                 /// </summary>
                 public readonly long[] WorldSurfaceWg;
 
+                public readonly HeightMap HeightMap;
+
                 public LevelHeightmap(NbtCompound data)
                 {
                     MotionBlocking = data.Get<NbtLongArray>("MOTION_BLOCKING")?.Value;
@@ -157,6 +159,15 @@ namespace BrainJar
                     OceanFloorWg = data.Get<NbtLongArray>("OCEAN_FLOOR_WG")?.Value;
                     WorldSurface = data.Get<NbtLongArray>("WORLD_SURFACE")?.Value;
                     WorldSurfaceWg = data.Get<NbtLongArray>("WORLD_SURFACE_WG")?.Value;
+
+                    HeightMap = new HeightMap(
+                        MotionBlocking,
+                        MotionBlockingNoLeaves,
+                        OceanFloor,
+                        OceanFloorWg,
+                        WorldSurface,
+                        WorldSurfaceWg
+                    );
                 }
             }
 

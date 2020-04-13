@@ -24,11 +24,34 @@ namespace BrainJar
                     -253, 64, -206
             */
 
-            var diamondBlocks = manager.Search(BlockTypes.BlockOfDiamond, -253, 64, -200);
+            await manager.LoadMegacube(-253, 64, -200);
 
-            await foreach (var block in diamondBlocks)
+            Console.WriteLine("Ready for input");
+
+            while (true)
             {
-                Console.WriteLine($"({block.X},{block.Y},{block.Z}) {block.Block.Name}");
+                var coords = Console
+                    .ReadLine()
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(int.Parse)
+                    .ToList();
+                var block = manager.GetBlock2(coords[0], coords[1], coords[2]);
+
+                if (block == null)
+                {
+                    Console.WriteLine("No block found");
+                }
+                else
+                {
+                    Console.WriteLine(block.Block.Name);
+                    if (block.Block.Properties != null)
+                    {
+                        foreach (var x in block.Block.Properties)
+                        {
+                            Console.WriteLine($"  {x.Key}: {x.Value}");
+                        }
+                    }
+                }
             }
         }
     }

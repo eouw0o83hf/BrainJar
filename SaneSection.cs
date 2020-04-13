@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace BrainJar
 {
@@ -17,6 +18,8 @@ namespace BrainJar
 
         public ICollection<PlacedBlock> PlacedBlocks { get; set; } = new List<PlacedBlock>();
 
+        private readonly HeightMap _heightMap;
+
         /// <summary>
         /// True offset, not index
         /// </summary>
@@ -26,16 +29,9 @@ namespace BrainJar
         /// </summary>
         public readonly int YIndex;
 
-        public SaneSection(Chunk.ChunkLevel.LevelSection section)
+        public SaneSection(Chunk.ChunkLevel.LevelSection section, HeightMap heightMap)
         {
-            var dumping = false;
-            if (section.PaletteRaw != null && section.PaletteRaw.ToString().Contains("diamond_block"))
-            {
-                Console.WriteLine("Found a diamond section");
-                Console.WriteLine(section.PaletteRaw);
-                Console.WriteLine();
-                dumping = true;
-            }
+            _heightMap = heightMap;
 
             YIndex = section.Y;
             YOffset = section.Y * 16;
@@ -61,24 +57,16 @@ namespace BrainJar
             );
 
             // Convert the long array to a bit array
+            // var stateIndices = section
+            //     .BlockStates
+            //     .ToBitGroups(IndexBits);
             var stateIndices = section
                 .BlockStates
-                .ToBits()
-                .Batch(IndexBits);
+                .DecompressInts(IndexBits)
+                .WithIndex();
 
-            foreach (var (entry, i) in stateIndices.WithIndex())
+            foreach (var (index, i) in stateIndices)
             {
-                var index = 0;
-                foreach (var bit in entry)
-                {
-                    // idempotent on first run
-                    index <<= 1;
-                    if (bit)
-                    {
-                        index |= 1;
-                    }
-                }
-
                 var scalarCoordinates = i;
                 var x = scalarCoordinates % 16;
                 scalarCoordinates /= 16;
@@ -86,26 +74,17 @@ namespace BrainJar
                 scalarCoordinates /= 16;
                 var y = scalarCoordinates % 16;
 
-                // According to this, an index without a matching
-                // value is considered air. Not sure if that holds
-                // but we'll run with it
-                // https://wiki.vg/Chunk_Format
-                if (!Palette.TryGetValue(index, out var block))
+                Block block = null;
+                if (//_heightMap.HasBlock(x, y + YOffset, z) &&
+                    Palette.ContainsKey(index))
                 {
-                    if (dumping)
-                    {
-                        Console.Write("miss!  ");
-                    }
+                    // if (y + YOffset == 70 && Palette[index].Name.Contains(BlockTypes.BlockOfDiamond))
+                    // {
+                    //     var entr2y = _heightMap.Entries.Single(a => a.XOffset == x && a.ZOffset == z);
+                    //     Console.WriteLine("we got a rogue diamond here");
+                    // }
 
-                    block = new Block
-                    {
-                        Name = BlockTypes.Air.ToMinecraftNamespace()
-                    };
-                }
-
-                if (dumping)
-                {
-                    Console.WriteLine($"{x},{y},{z} : {block.Name}");
+                    block = Palette[index];
                 }
 
                 PlacedBlocks.Add(new PlacedBlock

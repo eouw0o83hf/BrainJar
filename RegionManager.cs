@@ -44,8 +44,6 @@ namespace BrainJar
             Regions.Clear();
             await LoadMegacube(x, y, z);
 
-            yield break;
-
             var searchTerm = $"minecraft:{blockType}";
 
             foreach (var region in Regions)
@@ -60,7 +58,7 @@ namespace BrainJar
 
                         var blocks = section
                             .PlacedBlocks
-                            .Where(a => a.Block.Name == searchTerm);
+                            .Where(a => a.Block?.Name == searchTerm);
                         foreach (var block in blocks)
                         {
                             yield return new AbsolutelyPlacedBlock(
@@ -75,12 +73,41 @@ namespace BrainJar
             }
         }
 
+        public PlacedBlock GetBlock2(int x, int y, int z)
+        {
+            // Really fucking lazy but I don't feel like doing the math right now
+            foreach (var region in Regions)
+            {
+                foreach (var chunk in region.Chunks.Select(a => a.Chunk.Level))
+                {
+                    foreach (var section in chunk.SaneSections)
+                    {
+                        var xOffset = chunk.XPos * 16;
+                        var yOffset = section.YOffset;
+                        var zOffset = chunk.ZPos * 16;
+
+                        var blockX = x - xOffset;
+                        var blockY = y - yOffset;
+                        var blockZ = z - zOffset;
+
+                        var match = section.PlacedBlocks.SingleOrDefault(a => a.XOffset == blockX && a.YOffset == blockY && a.ZOffset == blockZ);
+                        if (match != null)
+                        {
+                            return match;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Loads the region containing the specified coordinate
         /// and all contiguous regions which exist in the
         /// regions folder. Loads up to 9 total regions.
         /// </summary>
-        private async Task LoadMegacube(int x, int y, int z)
+        public async Task LoadMegacube(int x, int y, int z)
         {
             await GetRegion(x, z);
             // for (var i = -1; i <= 1; ++i)
